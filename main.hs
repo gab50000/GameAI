@@ -1,4 +1,4 @@
-import Control.Monad (forever)
+import System.Exit
 import Prelude
 
 data Player = X | O deriving (Eq, Show)
@@ -140,18 +140,34 @@ playAgainstHuman state = do
   print $ "Your turn"
   move <- getInput
   let new_state = updateState state move
+  checkState new_state
   print $ "Calculating best move..."
   let best_move = chooseBestMove new_state (getMoves new_state) Nothing
   let ai_state = updateState new_state best_move
+  checkState ai_state
   playAgainstHuman ai_state
+
+checkState :: State -> IO ()
+checkState state
+  | determineWinner board /= Nothing = end
+  | isGameOver $ board = end
+  | otherwise = return ()
+  where
+    board = getBoard state
+    end = printBoard board >> print "Game Over" >> exitSuccess
 
 printBoard :: Board -> IO ()
 printBoard (row : rest)
-  | rest /= [] = print (line_str) >> print (take 20 $ repeat '-') >> printBoard rest
+  | rest /= [] = print (line_str) >> print (take 5 $ repeat '-') >> printBoard rest
   | otherwise = print (line_str)
   where
     (a : b : c : _) = row
-    line_str = (show a) ++ "|" ++ show b ++ "|" ++ show c
+    line_str = (drawSymbol a) ++ " " ++ drawSymbol b ++ " " ++ drawSymbol c
+
+drawSymbol :: Maybe Player -> String
+drawSymbol (Just X) = "X"
+drawSymbol (Just O) = "O"
+drawSymbol Nothing = "-"
 
 getInput :: IO (Int, Int)
 getInput = do
