@@ -138,7 +138,7 @@ playAgainstHuman :: State -> IO ()
 playAgainstHuman state = do
   printBoard $ getBoard state
   print $ "Your turn"
-  move <- getInput
+  move <- getInput moves
   let new_state = updateState state move
   checkState new_state
   print $ "Calculating best move..."
@@ -146,6 +146,8 @@ playAgainstHuman state = do
   let ai_state = updateState new_state best_move
   checkState ai_state
   playAgainstHuman ai_state
+  where
+    moves = getMoves state
 
 checkState :: State -> IO ()
 checkState state
@@ -154,8 +156,8 @@ checkState state
   | otherwise = return ()
   where
     board = getBoard state
-    end = printBoard board >> print "Game Over" >> printWinner winner >> exitSuccess
     winner = determineWinner board
+    end = printBoard board >> print "Game Over" >> printWinner winner >> exitSuccess
 
 printWinner :: Maybe Player -> IO ()
 printWinner x
@@ -175,13 +177,15 @@ drawSymbol (Just X) = "X"
 drawSymbol (Just O) = "O"
 drawSymbol Nothing = "-"
 
-getInput :: IO (Int, Int)
-getInput = do
+getInput :: [Move] -> IO (Int, Int)
+getInput moves = do
   input <- getLine
   let num = read input - 1
   let i = div num 3
   let j = mod num 3
-  return (i, j)
+  if (notElem (i, j) moves)
+    then print "Not a valid input" >> getInput moves
+    else return (i, j)
 
 main :: IO ()
 main = playAgainstHuman start_state
