@@ -19,6 +19,14 @@ exampleBoard =
     [Just X, Nothing, Just O]
   ]
 
+exampleState :: State
+exampleState =
+  State
+    { getBoard = exampleBoard,
+      getMoves = getPossibleMoves exampleBoard [] (0, 0),
+      getCurrentPlayer = X
+    }
+
 type Score = Int
 
 type Move = (Int, Int)
@@ -32,22 +40,25 @@ determineBestMove _ = ((0, 0), 0)
 
 chooseBestMove :: State -> [Move] -> Maybe Move -> Move
 chooseBestMove state (mv : moves) Nothing = chooseBestMove state moves (Just mv)
-chooseBestMove state (new_move : moves) (Just old_move)
+chooseBestMove state moves (Just old_move)
   | moves == [] = old_move
   | new_score > old_score = chooseBestMove state moves (Just new_move)
-  | otherwise = chooseBestMove state moves (Just old_move)
+  | otherwise = chooseBestMove state rest_moves (Just old_move)
   where
     new_score = getScore state new_move
     old_score = getScore state old_move
+    (new_move : rest_moves) = moves
 
 getScore :: State -> Move -> Score
 getScore state move
-  | determineWinner new_board == Just (current_player) = 1
+  | determineWinner board == Just (current_player) = 1
+  | determineWinner board == Just (opponent) = -1
   | isGameOver new_board = 0
   | otherwise = - (maximum $ map (getScore new_state) new_moves)
   where
     new_board = updateBoard board current_player move
     current_player = getCurrentPlayer state
+    opponent = getOpponent current_player
     board = getBoard state
     new_state = updateState state move
     new_moves = getMoves new_state
