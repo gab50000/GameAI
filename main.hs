@@ -149,12 +149,18 @@ playAgainstHuman state = do
 
 checkState :: State -> IO ()
 checkState state
-  | determineWinner board /= Nothing = end
-  | isGameOver $ board = end
+  | winner /= Nothing = end
+  | isGameOver board = end
   | otherwise = return ()
   where
     board = getBoard state
-    end = printBoard board >> print "Game Over" >> exitSuccess
+    end = printBoard board >> print "Game Over" >> printWinner winner >> exitSuccess
+    winner = determineWinner board
+
+printWinner :: Maybe Player -> IO ()
+printWinner x
+  | x == Nothing = return ()
+  | otherwise = print $ (drawSymbol x) ++ " wins"
 
 printBoard :: Board -> IO ()
 printBoard (row : rest)
