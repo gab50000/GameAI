@@ -4,8 +4,8 @@ import Prelude
 data Player = X | O deriving (Eq, Show)
 
 data State = State
-  { getBoard :: Board,
-    getMoves :: [Move],
+  { board :: Board,
+    moves :: [Move],
     getCurrentPlayer :: Player
   }
   deriving (Show)
@@ -26,8 +26,8 @@ exampleBoard =
 exampleState :: State
 exampleState =
   State
-    { getBoard = exampleBoard,
-      getMoves = getPossibleMoves exampleBoard [] (0, 0),
+    { board = exampleBoard,
+      moves = getPossibleMoves exampleBoard [] (0, 0),
       getCurrentPlayer = X
     }
 
@@ -51,17 +51,17 @@ chooseBestMove state moves (Just old_move)
 
 getScore :: State -> Move -> Score
 getScore state move
-  | determineWinner board == Just (current_player) = 1
-  | determineWinner board == Just (opponent) = -1
+  | determineWinner current_board == Just (current_player) = 1
+  | determineWinner current_board == Just (opponent) = -1
   | isGameOver new_board = 0
   | otherwise = - (maximum $ map (getScore new_state) new_moves)
   where
-    new_board = updateBoard board current_player move
+    new_board = updateBoard current_board current_player move
     current_player = getCurrentPlayer state
     opponent = getOpponent current_player
-    board = getBoard state
+    current_board = board state
     new_state = updateState state move
-    new_moves = getMoves new_state
+    new_moves = moves new_state
 
 getOpponent :: Player -> Player
 getOpponent X = O
@@ -80,13 +80,13 @@ getPossibleMoves board moves (i, j)
 updateState :: State -> Move -> State
 updateState state move =
   State
-    { getBoard = new_board,
-      getMoves = getPossibleMoves new_board [] (0, 0),
+    { board = new_board,
+      moves = getPossibleMoves new_board [] (0, 0),
       getCurrentPlayer = getOpponent player
     }
   where
-    board = getBoard state
-    new_board = updateBoard board player move
+    current_board = board state
+    new_board = updateBoard current_board player move
     player = getCurrentPlayer state
 
 updateBoard :: Board -> Player -> Move -> Board
@@ -129,35 +129,35 @@ empty_board = take 3 $ repeat $ take 3 $ repeat Nothing
 start_state :: State
 start_state =
   State
-    { getBoard = empty_board,
-      getMoves = getPossibleMoves empty_board [] (0, 0),
+    { board = empty_board,
+      moves = getPossibleMoves empty_board [] (0, 0),
       getCurrentPlayer = X
     }
 
 playAgainstHuman :: State -> IO ()
 playAgainstHuman state = do
-  printBoard $ getBoard state
+  printBoard $ board state
   print $ "Your turn"
-  move <- getInput moves
+  move <- getInput current_moves
   let new_state = updateState state move
   checkState new_state
   print $ "Calculating best move..."
-  let best_move = chooseBestMove new_state (getMoves new_state) Nothing
+  let best_move = chooseBestMove new_state (moves new_state) Nothing
   let ai_state = updateState new_state best_move
   checkState ai_state
   playAgainstHuman ai_state
   where
-    moves = getMoves state
+    current_moves = moves state
 
 checkState :: State -> IO ()
 checkState state
   | winner /= Nothing = end
-  | isGameOver board = end
+  | isGameOver current_board = end
   | otherwise = return ()
   where
-    board = getBoard state
-    winner = determineWinner board
-    end = printBoard board >> print "Game Over" >> printWinner winner >> exitSuccess
+    current_board = board state
+    winner = determineWinner current_board
+    end = printBoard current_board >> print "Game Over" >> printWinner winner >> exitSuccess
 
 printWinner :: Maybe Player -> IO ()
 printWinner x
