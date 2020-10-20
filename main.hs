@@ -12,6 +12,10 @@ data State = State
 
 type Board = [[Maybe Player]]
 
+type Score = Int
+
+type Move = (Int, Int)
+
 exampleBoard :: Board
 exampleBoard =
   [ [Just X, Just O, Nothing],
@@ -26,10 +30,6 @@ exampleState =
       getMoves = getPossibleMoves exampleBoard [] (0, 0),
       getCurrentPlayer = X
     }
-
-type Score = Int
-
-type Move = (Int, Int)
 
 isFull :: Board -> Bool
 isFull [] = True
