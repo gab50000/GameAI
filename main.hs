@@ -51,8 +51,8 @@ chooseBestMove state moves (Just old_move)
 
 getScore :: State -> Move -> Score
 getScore state move
-  | determineWinner current_board == Just (current_player) = 1
-  | determineWinner current_board == Just (opponent) = -1
+  | determineWinner new_board == Just (current_player) = 1
+  | determineWinner new_board == Just (opponent) = -1
   | isGameOver new_board = 0
   | otherwise = - (maximum $ map (getScore new_state) new_moves)
   where
