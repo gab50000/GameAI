@@ -3,6 +3,10 @@ import Prelude
 
 data Player = X | O deriving (Eq, Show)
 
+type Board = [[Maybe Player]]
+
+type Move = (Int, Int)
+
 data State = State
   { board :: Board,
     moves :: [Move],
@@ -10,11 +14,7 @@ data State = State
   }
   deriving (Show)
 
-type Board = [[Maybe Player]]
-
 type Score = Int
-
-type Move = (Int, Int)
 
 exampleBoard :: Board
 exampleBoard =
