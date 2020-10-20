@@ -10,7 +10,7 @@ type Move = (Int, Int)
 data State = State
   { board :: Board,
     moves :: [Move],
-    getCurrentPlayer :: Player
+    player :: Player
   }
   deriving (Show)
 
@@ -28,7 +28,7 @@ exampleState =
   State
     { board = exampleBoard,
       moves = getPossibleMoves exampleBoard [] (0, 0),
-      getCurrentPlayer = X
+      player = X
     }
 
 isFull :: Board -> Bool
@@ -57,7 +57,7 @@ getScore state move
   | otherwise = - (maximum $ map (getScore new_state) new_moves)
   where
     new_board = updateBoard current_board current_player move
-    current_player = getCurrentPlayer state
+    current_player = player state
     opponent = getOpponent current_player
     current_board = board state
     new_state = updateState state move
@@ -82,12 +82,12 @@ updateState state move =
   State
     { board = new_board,
       moves = getPossibleMoves new_board [] (0, 0),
-      getCurrentPlayer = getOpponent player
+      player = getOpponent current_player
     }
   where
     current_board = board state
-    new_board = updateBoard current_board player move
-    player = getCurrentPlayer state
+    new_board = updateBoard current_board current_player move
+    current_player = player state
 
 updateBoard :: Board -> Player -> Move -> Board
 updateBoard board player (i, j) = rows_before ++ [row_beginning ++ [Just player] ++ row_end] ++ rows_after
@@ -131,7 +131,7 @@ start_state =
   State
     { board = empty_board,
       moves = getPossibleMoves empty_board [] (0, 0),
-      getCurrentPlayer = X
+      player = X
     }
 
 playAgainstHuman :: State -> IO ()
