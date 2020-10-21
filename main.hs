@@ -1,20 +1,45 @@
+{-# LANGUAGE TypeFamilies #-}
+
+import Game
 import System.Exit
 import Prelude
 
-data Player = X | O deriving (Eq, Show)
+instance GameState TicTacToeState where
+  type Move TicTacToeState = (Int, Int)
 
-type Board = [[Maybe Player]]
+  chooseBestMove state (mv : moves) Nothing = chooseBestMove state moves (Just mv)
+  chooseBestMove state moves (Just old_move)
+    | moves == [] = old_move
+    | new_score > old_score = chooseBestMove state moves (Just new_move)
+    | otherwise = chooseBestMove state rest_moves (Just old_move)
+    where
+      new_score = getScore state new_move
+      old_score = getScore state old_move
+      (new_move : rest_moves) = moves
 
-type Move = (Int, Int)
+  getScore state move
+    | determineWinner new_board == Just (current_player) = 1
+    | determineWinner new_board == Just (opponent) = -1
+    | isGameOver new_board = 0
+    | otherwise = - (maximum $ map (getScore new_state) new_moves)
+    where
+      new_board = updateBoard current_board current_player move
+      current_player = player state
+      opponent = getOpponent current_player
+      current_board = board state
+      new_state = updateState state move
+      new_moves = moves new_state
 
-data State = State
+data TicTacToeState = TicTacToeState
   { board :: Board,
-    moves :: [Move],
+    moves :: [Move TicTacToeState],
     player :: Player
   }
   deriving (Show)
 
-type Score = Int
+type Board = [[Maybe Player]]
+
+data Player = X | O deriving (Eq, Show)
 
 exampleBoard :: Board
 exampleBoard =
@@ -23,9 +48,9 @@ exampleBoard =
     [Just X, Nothing, Just O]
   ]
 
-exampleState :: State
+exampleState :: TicTacToeState
 exampleState =
-  State
+  TicTacToeState
     { board = exampleBoard,
       moves = getPossibleMoves exampleBoard [] (0, 0),
       player = X
@@ -35,39 +60,11 @@ isFull :: Board -> Bool
 isFull [] = True
 isFull (row : rest) = all (/= Nothing) row && isFull rest
 
-determineBestMove :: State -> (Move, Score)
-determineBestMove _ = ((0, 0), 0)
-
-chooseBestMove :: State -> [Move] -> Maybe Move -> Move
-chooseBestMove state (mv : moves) Nothing = chooseBestMove state moves (Just mv)
-chooseBestMove state moves (Just old_move)
-  | moves == [] = old_move
-  | new_score > old_score = chooseBestMove state moves (Just new_move)
-  | otherwise = chooseBestMove state rest_moves (Just old_move)
-  where
-    new_score = getScore state new_move
-    old_score = getScore state old_move
-    (new_move : rest_moves) = moves
-
-getScore :: State -> Move -> Score
-getScore state move
-  | determineWinner new_board == Just (current_player) = 1
-  | determineWinner new_board == Just (opponent) = -1
-  | isGameOver new_board = 0
-  | otherwise = - (maximum $ map (getScore new_state) new_moves)
-  where
-    new_board = updateBoard current_board current_player move
-    current_player = player state
-    opponent = getOpponent current_player
-    current_board = board state
-    new_state = updateState state move
-    new_moves = moves new_state
-
 getOpponent :: Player -> Player
 getOpponent X = O
 getOpponent O = X
 
-getPossibleMoves :: Board -> [Move] -> (Int, Int) -> [Move]
+getPossibleMoves :: Board -> [Move TicTacToeState] -> (Int, Int) -> [Move TicTacToeState]
 getPossibleMoves board moves (i, j)
   | board == [] = moves
   | row == [] = getPossibleMoves rest_of_board moves (i + 1, 0)
@@ -77,9 +74,9 @@ getPossibleMoves board moves (i, j)
     val : rest_of_row = row
     row : rest_of_board = board
 
-updateState :: State -> Move -> State
+updateState :: TicTacToeState -> (Move TicTacToeState) -> TicTacToeState
 updateState state move =
-  State
+  TicTacToeState
     { board = new_board,
       moves = getPossibleMoves new_board [] (0, 0),
       player = getOpponent current_player
@@ -89,7 +86,7 @@ updateState state move =
     new_board = updateBoard current_board current_player move
     current_player = player state
 
-updateBoard :: Board -> Player -> Move -> Board
+updateBoard :: Board -> Player -> (Move TicTacToeState) -> Board
 updateBoard board player (i, j) = rows_before ++ [row_beginning ++ [Just player] ++ row_end] ++ rows_after
   where
     (rows_before, row : rows_after) = splitAt i board
@@ -126,15 +123,15 @@ diagonal (row : rest) = head row : diagonal rest
 empty_board :: Board
 empty_board = take 3 $ repeat $ take 3 $ repeat Nothing
 
-start_state :: State
+start_state :: TicTacToeState
 start_state =
-  State
+  TicTacToeState
     { board = empty_board,
       moves = getPossibleMoves empty_board [] (0, 0),
       player = X
     }
 
-playAgainstHuman :: State -> IO ()
+playAgainstHuman :: TicTacToeState -> IO ()
 playAgainstHuman state = do
   printBoard $ board state
   print $ "Your turn"
@@ -149,7 +146,7 @@ playAgainstHuman state = do
   where
     current_moves = moves state
 
-checkState :: State -> IO ()
+checkState :: TicTacToeState -> IO ()
 checkState state
   | winner /= Nothing = end
   | isGameOver current_board = end
@@ -177,7 +174,7 @@ drawSymbol (Just X) = "X"
 drawSymbol (Just O) = "O"
 drawSymbol Nothing = "-"
 
-getInput :: [Move] -> IO (Int, Int)
+getInput :: [Move TicTacToeState] -> IO (Int, Int)
 getInput moves = do
   input <- getLine
   let num = read input - 1
