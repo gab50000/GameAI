@@ -94,7 +94,7 @@ determineWinner board
   where
     same_along_rows = allEqual board
     same_along_cols = allEqual $ transpose board
-    same_along_diags = allEqual $ [diagonal board, diagonal $ transpose board]
+    same_along_diags = allEqual $ [diagonal board, diagonal $ map reverse board]
 
 allEqual :: Board -> Maybe Player
 allEqual ((x : xs) : rest_of_board)
@@ -108,7 +108,7 @@ transpose board = (map head board) : transpose (map tail board)
 
 diagonal :: Board -> [Maybe Player]
 diagonal [] = []
-diagonal (row : rest) = head row : diagonal rest
+diagonal (row : rest) = head row : (diagonal $ map tail rest)
 
 empty_board :: Board
 empty_board = take 3 $ repeat $ take 3 $ repeat Nothing
