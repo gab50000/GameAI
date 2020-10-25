@@ -18,11 +18,10 @@ instance GameState TicTacToeState where
       opponent = getOpponent current_player
       current_board = board state
       new_state = updateState state move
-      new_moves = moves new_state
+      new_moves = getMoves new_state
 
 data TicTacToeState = TicTacToeState
   { board :: Board,
-    moves :: [Move TicTacToeState],
     player :: Player
   }
   deriving (Show)
@@ -42,7 +41,6 @@ exampleState :: TicTacToeState
 exampleState =
   TicTacToeState
     { board = exampleBoard,
-      moves = getPossibleMoves exampleBoard [] (0, 0),
       player = X
     }
 
@@ -53,6 +51,11 @@ isFull (row : rest) = all (/= Nothing) row && isFull rest
 getOpponent :: Player -> Player
 getOpponent X = O
 getOpponent O = X
+
+getMoves :: TicTacToeState -> [Move TicTacToeState]
+getMoves state = getPossibleMoves brd [] (0, 0)
+  where
+    brd = board state
 
 getPossibleMoves :: Board -> [Move TicTacToeState] -> (Int, Int) -> [Move TicTacToeState]
 getPossibleMoves board moves (i, j)
@@ -68,7 +71,6 @@ updateState :: TicTacToeState -> (Move TicTacToeState) -> TicTacToeState
 updateState state move =
   TicTacToeState
     { board = new_board,
-      moves = getPossibleMoves new_board [] (0, 0),
       player = getOpponent current_player
     }
   where
@@ -117,7 +119,6 @@ start_state :: TicTacToeState
 start_state =
   TicTacToeState
     { board = empty_board,
-      moves = getPossibleMoves empty_board [] (0, 0),
       player = X
     }
 
@@ -129,12 +130,12 @@ playAgainstHuman state = do
   let new_state = updateState state move
   checkState new_state
   print $ "Calculating best move..."
-  let best_move = chooseBestMove new_state (moves new_state) Nothing
+  let best_move = chooseBestMove new_state (getMoves new_state) Nothing
   let ai_state = updateState new_state best_move
   checkState ai_state
   playAgainstHuman ai_state
   where
-    current_moves = moves state
+    current_moves = getMoves state
 
 checkState :: TicTacToeState -> IO ()
 checkState state
