@@ -10,18 +10,20 @@ type To = Position
 
 type Board = [[Maybe Player]]
 
-data Player = Black | White
+data Player = BlackMan | WhiteMan | BlackKing | WhiteKing
 
 exampleBoard :: Board
 exampleBoard =
-  (take 2 $ repeat (take 4 $ repeat (Just White)))
+  (take 2 $ repeat $ (take 3 $ repeat (Just WhiteMan)) ++ [Just WhiteKing])
     ++ (take 2 $ repeat (take 4 $ repeat Nothing))
-    ++ (take 2 $ repeat (take 4 $ repeat (Just Black)))
+    ++ (take 2 $ repeat $ (take 3 $ repeat (Just BlackMan)) ++ [Just BlackKing])
 
 printPlayer :: Maybe Player -> String
 printPlayer Nothing = " "
-printPlayer (Just Black) = "o"
-printPlayer (Just White) = "●"
+printPlayer (Just BlackMan) = "o"
+printPlayer (Just BlackKing) = "♔"
+printPlayer (Just WhiteMan) = "●"
+printPlayer (Just WhiteKing) = "♚"
 
 instance GameState Checkers where
   type Move Checkers = (From, To)
