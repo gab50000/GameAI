@@ -21,11 +21,14 @@ type To = Position
 type Board = [[Maybe (Color Piece)]]
 
 data Piece = Man | King
-  deriving (Show)
+  deriving (Eq, Show)
 
 data Color a = Black a | White a
+  deriving (Eq, Show)
 
 data Player
+
+data Direction = Up | Down deriving (Eq)
 
 exampleBoard :: Board
 exampleBoard =
