@@ -32,9 +32,9 @@ data Direction = Up | Down deriving (Eq)
 
 exampleBoard :: Board
 exampleBoard =
-  (take 2 $ repeat $ (take 3 $ repeat (Just (White Man))) ++ [Just (White King)])
+  (take 3 $ repeat $ (take 3 $ repeat (Just (White Man))) ++ [Just (White King)])
     ++ (take 2 $ repeat (take 4 $ repeat Nothing))
-    ++ (take 2 $ repeat $ (take 3 $ repeat (Just (Black Man))) ++ [Just (Black King)])
+    ++ (take 3 $ repeat $ (take 3 $ repeat (Just (Black Man))) ++ [Just (Black King)])
 
 printPiece :: Maybe (Color Piece) -> String
 printPiece Nothing = " "
