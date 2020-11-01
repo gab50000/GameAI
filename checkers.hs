@@ -83,30 +83,25 @@ getField :: Board -> Position -> Maybe (Color Piece)
 getField [] _ = Nothing
 getField board (i, j) = (board !! i) !! j
 
-getMovesPiece :: Checkers -> Position -> Direction -> [Move Checkers]
-getMovesPiece board_ pos dir = getLeftMove board_ pos dir ++ getRightMove board_ pos dir
-
-getLeftMove :: Checkers -> Position -> Direction -> [Move Checkers]
-getLeftMove checkers (i, j) dir
-  | dir == Up && j == 0 = []
-  | dir == Down && j == 7 = []
-  | dir == Up && board_ !! (i - 1) !! (j - 1) /= Nothing = []
-  | dir == Down && board_ !! (i + 1) !! (j + 1) /= Nothing = []
-  | dir == Up = [((i, j), (i - 1, j - 1))]
-  | dir == Down = [((i, j), (i + 1, j + 1))]
+getMoves :: Board -> Position -> Direction -> [Move Checkers]
+getMoves board_ pos dir = leftMove ++ rightMove
   where
-    board_ = board checkers
+    leftMove = getMove board_ pos dir Left
+    rightMove = getMove board_ pos dir Right
 
-getRightMove :: Checkers -> Position -> Direction -> [Move Checkers]
-getRightMove checkers (i, j) dir
-  | dir == Up && j == 0 = []
-  | dir == Down && j == 7 = []
-  | dir == Up && board_ !! (i - 1) !! (j + 1) /= Nothing = []
-  | dir == Down && board_ !! (i + 1) !! (j - 1) /= Nothing = []
-  | dir == Up = [((i, j), (i - 1, j + 1))]
-  | dir == Down = [((i, j), (i + 1, j - 1))]
+getMove :: Board -> Position -> Direction -> Side -> [Move Checkers]
+getMove board_ pos dir side
+  | Nothing <- diagPos = []
+  | Just newPos <- diagPos,
+    Nothing <- getPiece board_ newPos =
+    [(pos, newPos)]
+  | otherwise = []
   where
-    board_ = board checkers
+    (i, j) = pos
+    diagPos = getDiagonalPosition (i, j) dir side
+
+getJump :: Board -> Position -> Direction -> Side -> [Move Checkers]
+getJump _ _ _ _ = []
 
 getLeftJump :: Checkers -> Position -> Direction -> [Move Checkers]
 getLeftJump checkers (i, j) dir
@@ -121,7 +116,13 @@ getLeftJump checkers (i, j) dir
     player_ = player checkers
     oppositePlayer = getOppositeColor player_
 
+getPiece :: Board -> Position -> Maybe (Color Piece)
+getPiece board_ (i, j) = board_ !! i !! j
+
 getDiagonalPosition :: Position -> Direction -> Side -> Maybe (Position)
+-- White fields are no valid fields
+getDiagonalPosition (i, j) _ _
+  | mod (i + j) 2 == 0 = Nothing
 getDiagonalPosition (0, _) Up _ = Nothing
 getDiagonalPosition (7, _) Down _ = Nothing
 getDiagonalPosition (_, 0) Up Left = Nothing
@@ -133,14 +134,3 @@ getDiagonalPosition (i, j) Up Right = Just (i - 1, j + 1)
 getDiagonalPosition (i, j) Down Left = Just (i + 1, j + 1)
 getDiagonalPosition (i, j) Down Right = Just (i + 1, j - 1)
 getDiagonalPosition _ _ _ = Nothing
-
-getRightJump :: Board -> Position -> Direction -> [Move Checkers]
-getRightJump board (i, j) dir = []
-
-jumpPos :: Piece -> Position -> Direction -> [Position]
-jumpPos Man (0, _) Up = []
-jumpPos Man (7, _) Down = []
-
--- getMoves :: Checkers -> [Move Checkers]
-
-etMoves _ = []
