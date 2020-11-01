@@ -76,7 +76,7 @@ printRow [] = do
   putStrLn ""
   return ()
 printRow (x : xs) = do
-  putStr (printPiece x ++ "-")
+  putStr (printPiece x ++ "|")
   printRow xs
 
 getField :: Board -> Position -> Maybe (Color Piece)
