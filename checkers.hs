@@ -2,11 +2,11 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 
-import Data.Sequence (Seq, fromList, index, reverse)
+import Data.Sequence hiding (Empty, (:<))
 import qualified Data.Sequence as Sq
 import Game
 import Prelude hiding (Either (..), replicate, reverse, take)
-import qualified Prelude as List (repeat, replicate, reverse, take)
+import qualified Prelude as List
 
 pattern Empty <- (Sq.viewl -> Sq.EmptyL) where Empty = Sq.empty
 
