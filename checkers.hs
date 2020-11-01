@@ -101,20 +101,23 @@ getMove board_ pos dir side
     diagPos = getDiagonalPosition (i, j) dir side
 
 getJump :: Board -> Position -> Direction -> Side -> [Move Checkers]
-getJump _ _ _ _ = []
-
-getLeftJump :: Checkers -> Position -> Direction -> [Move Checkers]
-getLeftJump checkers (i, j) dir
-  | dir == Up && j == 0 = []
-  | dir == Down && j == 7 = []
-  | dir == Up && board_ !! (i - 1) !! (j - 1) /= Nothing = []
-  | dir == Down && board_ !! (i + 1) !! (j + 1) /= Nothing = []
-  | dir == Up = [((i, j), (i - 1, j - 1))]
-  | dir == Down = [((i, j), (i + 1, j + 1))]
+getJump board pos dir side
+  | destination /= Nothing = []
+  | Just playerColor <- player_,
+    oppositePlayer <- getOppositeColor playerColor,
+    Just enemyPos <- diag1,
+    Just playerOnDiag <- getPiece board enemyPos,
+    playerOnDiag == oppositePlayer,
+    Just newPos <- diag2 =
+    [(pos, newPos)]
+  | otherwise = []
   where
-    board_ = board checkers
-    player_ = player checkers
-    oppositePlayer = getOppositeColor player_
+    diagonalOnce pos' = getDiagonalPosition pos' dir side
+    diagonalTwice pos' = diagonalOnce pos' >>= diagonalOnce
+    diag1 = diagonalOnce pos
+    diag2 = diagonalTwice pos
+    destination = diag2 >>= getPiece board
+    player_ = getPiece board pos
 
 getPiece :: Board -> Position -> Maybe (Color Piece)
 getPiece board_ (i, j) = board_ !! i !! j
