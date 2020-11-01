@@ -1,12 +1,27 @@
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ViewPatterns #-}
 
+import Data.Sequence (Seq, fromList, index, reverse)
+import qualified Data.Sequence as Sq
 import Game
-import Prelude hiding (Either (..))
+import Prelude hiding (Either (..), replicate, reverse, take)
+import qualified Prelude as List (repeat, replicate, reverse, take)
+
+pattern Empty <- (Sq.viewl -> Sq.EmptyL) where Empty = Sq.empty
+
+pattern x :< xs <- (Sq.viewl -> x Sq.:< xs) where (:<) = (Sq.<|)
+
+pattern xs :> x <- (Sq.viewr -> xs Sq.:> x) where (:>) = (Sq.|>)
 
 instance GameState Checkers where
   type Move Checkers = (From, To)
 
   getScore state move = 5
+    where
+      currentPlayer = player state
+
+-- newState = makeMove state move
 
 data Checkers = Checkers
   { board :: Board,
@@ -19,7 +34,7 @@ type From = Position
 
 type To = Position
 
-type Board = [[Maybe (Color Piece)]]
+type Board = Seq (Seq (Maybe (Color Piece)))
 
 data Piece = Man | King
   deriving (Eq, Show)
@@ -39,21 +54,29 @@ getOppositeColor (White a) = (Black a)
 
 exampleBoard :: Board
 exampleBoard =
-  (take 3 $ repeat $ (take 3 $ repeat (Just (White Man))) ++ [Just (White King)])
-    ++ (take 2 $ repeat (take 4 $ repeat Nothing))
-    ++ (take 3 $ repeat $ (take 3 $ repeat (Just (Black Man))) ++ [Just (Black King)])
+  fromList $
+    map
+      fromList
+      ( (List.take 3 $ List.repeat $ (List.take 3 $ List.repeat (Just (White Man))) ++ [Just (White King)])
+          ++ (List.take 2 $ List.repeat (List.take 4 $ List.repeat Nothing))
+          ++ (List.take 3 $ List.repeat $ (List.take 3 $ List.repeat (Just (Black Man))) ++ [Just (Black King)])
+      )
 
 initialBoard :: Board
 initialBoard =
-  [ [Nothing, Just (White Man), Nothing, Just (White Man), Nothing, Just (White Man), Nothing, Just (White Man)],
-    [Just (White Man), Nothing, Just (White Man), Nothing, Just (White Man), Nothing, Just (White Man), Nothing],
-    [Nothing, Just (White Man), Nothing, Just (White Man), Nothing, Just (White Man), Nothing, Just (White Man)],
-    take 8 (repeat Nothing),
-    [Nothing, Just (White Man), Nothing] ++ take 5 (repeat Nothing),
-    [Just (Black Man), Nothing, Just (Black Man), Nothing, Just (Black Man), Nothing, Just (Black Man), Nothing],
-    [Nothing, Just (Black Man), Nothing, Just (Black Man), Nothing, Just (Black Man), Nothing, Just (Black Man)],
-    [Just (Black Man), Nothing, Just (Black Man), Nothing, Just (Black Man), Nothing, Just (Black Man), Nothing]
-  ]
+  fromList $
+    map
+      fromList
+      ( [ [Nothing, Just (White Man), Nothing, Just (White Man), Nothing, Just (White Man), Nothing, Just (White Man)],
+          [Just (White Man), Nothing, Just (White Man), Nothing, Just (White Man), Nothing, Just (White Man), Nothing],
+          [Nothing, Just (White Man), Nothing, Just (White Man), Nothing, Just (White Man), Nothing, Just (White Man)],
+          List.replicate 8 Nothing,
+          [Nothing, Just (White Man), Nothing] ++ List.replicate 5 Nothing,
+          [Just (Black Man), Nothing, Just (Black Man), Nothing, Just (Black Man), Nothing, Just (Black Man), Nothing],
+          [Nothing, Just (Black Man), Nothing, Just (Black Man), Nothing, Just (Black Man), Nothing, Just (Black Man)],
+          [Just (Black Man), Nothing, Just (Black Man), Nothing, Just (Black Man), Nothing, Just (Black Man), Nothing]
+        ]
+      )
 
 printPiece :: Maybe (Color Piece) -> String
 printPiece Nothing = " "
@@ -63,25 +86,25 @@ printPiece (Just (White Man)) = "●"
 printPiece (Just (White King)) = "♚"
 
 printBoard :: Board -> IO ()
-printBoard [] = return ()
-printBoard (row : rest) = do
+printBoard Empty = return ()
+printBoard (row :< rest) = do
   printRow row
   printBoard rest
 
 flipBoard :: Board -> Board
-flipBoard board = reverse (map reverse board)
+flipBoard board = reverse (fmap reverse board)
 
-printRow :: [Maybe (Color Piece)] -> IO ()
-printRow [] = do
+printRow :: Seq (Maybe (Color Piece)) -> IO ()
+printRow Empty = do
   putStrLn ""
   return ()
-printRow (x : xs) = do
+printRow (x :< xs) = do
   putStr (printPiece x ++ "|")
   printRow xs
 
 getField :: Board -> Position -> Maybe (Color Piece)
-getField [] _ = Nothing
-getField board (i, j) = (board !! i) !! j
+getField Empty _ = Nothing
+getField board (i, j) = (board `index` i) `index` j
 
 getMoves :: Board -> Position -> Direction -> [Move Checkers]
 getMoves board_ pos dir = leftMove ++ rightMove
@@ -99,6 +122,10 @@ getMove board_ pos dir side
   where
     (i, j) = pos
     diagPos = getDiagonalPosition (i, j) dir side
+
+-- makeMove :: Checkers -> Move Checkers -> Checkers
+-- makeMove state ((i, j), (ii, jj))
+--   | abs (i - ii) == 2 = removeAt board ((i + ii) / 2, (j + jj) / 2)
 
 getJump :: Board -> Position -> Direction -> Side -> [Move Checkers]
 getJump board pos dir side
@@ -120,7 +147,7 @@ getJump board pos dir side
     player_ = getPiece board pos
 
 getPiece :: Board -> Position -> Maybe (Color Piece)
-getPiece board_ (i, j) = board_ !! i !! j
+getPiece board_ (i, j) = board_ `index` i `index` j
 
 getDiagonalPosition :: Position -> Direction -> Side -> Maybe (Position)
 -- White fields are no valid fields
@@ -137,3 +164,6 @@ getDiagonalPosition (i, j) Up Right = Just (i - 1, j + 1)
 getDiagonalPosition (i, j) Down Left = Just (i + 1, j + 1)
 getDiagonalPosition (i, j) Down Right = Just (i + 1, j - 1)
 getDiagonalPosition _ _ _ = Nothing
+
+removeAt :: Board -> Position -> Board
+removeAt board _ = board
