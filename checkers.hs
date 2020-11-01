@@ -165,5 +165,11 @@ getDiagonalPosition (i, j) Down Left = Just (i + 1, j + 1)
 getDiagonalPosition (i, j) Down Right = Just (i + 1, j - 1)
 getDiagonalPosition _ _ _ = Nothing
 
-removeAt :: Board -> Position -> Board
-removeAt board _ = board
+removePiece :: Board -> Position -> Board
+removePiece board pos = insertPiece board pos Nothing
+
+insertPiece :: Board -> Position -> Maybe (Color Piece) -> Board
+insertPiece board (i, j) newPiece = update i newRow board
+  where
+    newRow = update j newPiece oldRow
+    oldRow = index board i
