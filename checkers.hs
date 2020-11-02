@@ -2,6 +2,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 
+import Data.Foldable (toList)
 import Data.Sequence hiding (Empty, (:<))
 import qualified Data.Sequence as Sq
 import Game
@@ -126,16 +127,28 @@ getMove board_ pos dir side
     (i, j) = pos
     diagPos = getDiagonalPosition (i, j) dir side
 
--- getAllMoves :: Board -> Color -> Direction -> [Move Checkers]
--- getAllMoves board player direction
---   | player == White = concat $ map getMovesBoardDirection whitePositions
---   where
---     getMovesBoardDirection pos = getMoves board pos direction
---     whitePositions = [((0, 0), (0, 0))]
+getAllMoves :: Board -> Color -> Direction -> [Move Checkers]
+getAllMoves board playerColor direction = concat $ map getMovesBoardDirection playerPositions
+  where
+    getMovesBoardDirection pos = getMoves board pos direction
+    playerPositions = getPositions board playerColor
 
 getPositions :: Board -> Color -> [Position]
-getPositions board color
-  | board <- Empty = []
+getPositions board color_
+  | board == Empty = []
+  | otherwise = toList $ concat $ mapWithIndex getColIndices board
+  where
+    getColIndices :: Int -> Seq (Maybe Piece) -> [Position]
+    getColIndices i row = [(i, j) | j <- colIndices]
+      where
+        colIndices = findIndicesL (hasColor) row
+          where
+            hasColor :: Maybe Piece -> Bool
+            hasColor maybePiece
+              | Just piece <- maybePiece,
+                color piece == color_ =
+                True
+              | otherwise = False
 
 makeMove :: Board -> Move Checkers -> Board
 makeMove board ((i, j), (ii, jj))
