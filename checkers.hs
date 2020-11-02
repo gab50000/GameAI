@@ -123,9 +123,14 @@ getMove board_ pos dir side
     (i, j) = pos
     diagPos = getDiagonalPosition (i, j) dir side
 
--- makeMove :: Checkers -> Move Checkers -> Checkers
--- makeMove state ((i, j), (ii, jj))
---   | abs (i - ii) == 2 = removeAt board ((i + ii) / 2, (j + jj) / 2)
+makeMove :: Board -> Move Checkers -> Board
+makeMove board ((i, j), (ii, jj))
+  | abs (i - ii) == 2 = removePiece boardNewPosMinusOldPos ((i + ii) `div` 2, (j + jj) `div` 2)
+  | abs (i - ii) == 1 = boardNewPosMinusOldPos
+  where
+    currentPiece = board `index` i `index` j
+    boardNewPos = insertPiece board (ii, jj) currentPiece
+    boardNewPosMinusOldPos = removePiece boardNewPos (ii, jj)
 
 getJump :: Board -> Position -> Direction -> Side -> [Move Checkers]
 getJump board pos dir side
