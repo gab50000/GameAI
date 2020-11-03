@@ -10,7 +10,7 @@ class GameState game where
   chooseBestMove :: game -> [Move game] -> Maybe (Move game) -> (Move game)
   chooseBestMove state (mv : moves) Nothing = chooseBestMove state moves (Just mv)
   chooseBestMove state moves (Just old_move)
-    | length moves == 0 = old_move
+    | [] <- moves = old_move
     | new_score > old_score = chooseBestMove state moves (Just new_move)
     | otherwise = chooseBestMove state rest_moves (Just old_move)
     where
