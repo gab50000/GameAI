@@ -2,9 +2,12 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 
+import Data.Char (isDigit, isSpace, toLower)
 import Data.Foldable (toList)
+import Data.List (elemIndex)
 import Data.Sequence hiding (Empty, (:<))
 import qualified Data.Sequence as Sq
+import Data.Text (Text, pack, strip, unpack)
 import Game
 import Prelude hiding (Either (..), replicate, reverse, take)
 import qualified Prelude as List
@@ -217,3 +220,26 @@ insertPiece board (i, j) newPiece = update i newRow board
   where
     newRow = update j newPiece oldRow
     oldRow = index board i
+
+parseMove :: String -> Maybe (Move Checkers)
+parseMove input
+  | (c1 : d1 : c2 : d2 : rest) <- strippedInput,
+    [] <- rest,
+    all isValidLetter (c1, c2),
+    all isDigit (d1, d2) =
+    convert input
+  | otherwise = Nothing
+  where
+    strippedInput = List.filter (not . isSpace) input
+    isValidLetter :: Char -> Bool
+    isValidLetter char = elem (toLower char) letters
+    letters = ['a' .. 'h']
+    convert :: String -> Maybe (Move Checkers)
+    convert (c1 : d1 : c2 : d2 : _)
+      | (Just i2, Just ii2) <- (i, ii) = Just ((i2, j), (ii2, jj))
+      | otherwise = Nothing
+      where
+        i = elemIndex c1 letters
+        j = read [d1] :: Int
+        ii = elemIndex c2 letters
+        jj = read [d2] :: Int
