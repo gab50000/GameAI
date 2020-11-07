@@ -84,16 +84,21 @@ initialBoard =
   fromList $
     map
       fromList
-      ( [ [Nothing, Just (Piece White Man), Nothing, Just (Piece White Man), Nothing, Just (Piece White Man), Nothing, Just (Piece White Man)],
-          [Just (Piece White Man), Nothing, Just (Piece White Man), Nothing, Just (Piece White Man), Nothing, Just (Piece White Man), Nothing],
-          [Nothing, Just (Piece White Man), Nothing, Just (Piece White Man), Nothing, Just (Piece White Man), Nothing, Just (Piece White Man)],
+      ( [ multiply 4 [Nothing, Just (Piece White Man)],
+          multiply 4 [Just (Piece White Man), Nothing],
+          multiply 4 [Nothing, Just (Piece White Man)],
           List.replicate 8 Nothing,
-          [Nothing, Just (Piece White Man), Nothing] ++ List.replicate 5 Nothing,
-          [Just (Piece Black Man), Nothing, Just (Piece Black Man), Nothing, Just (Piece Black Man), Nothing, Just (Piece Black Man), Nothing],
-          [Nothing, Just (Piece Black Man), Nothing, Just (Piece Black Man), Nothing, Just (Piece Black Man), Nothing, Just (Piece Black Man)],
-          [Just (Piece Black Man), Nothing, Just (Piece Black Man), Nothing, Just (Piece Black Man), Nothing, Just (Piece Black Man), Nothing]
+          List.replicate 8 Nothing,
+          multiply 4 [Just (Piece Black Man), Nothing],
+          multiply 4 [Nothing, Just (Piece Black Man)],
+          multiply 4 [Just (Piece Black Man), Nothing]
         ]
       )
+  where
+    multiply :: Int -> [a] -> [a]
+    multiply n list
+      | n > 0 = list ++ multiply (n -1) list
+      | otherwise = []
 
 printPiece :: Maybe Piece -> String
 printPiece Nothing = " "
