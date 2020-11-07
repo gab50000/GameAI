@@ -238,7 +238,7 @@ parseMove input
     convert :: String -> Maybe (Move Checkers)
     convert (c1 : d1 : c2 : d2 : _)
       | (Just i2, Just ii2) <- (i, ii),
-        all isValidNumber [j, jj] =
+        all isValidNumber (j, jj) =
         Just ((i2, j - 1), (ii2, jj - 1))
       | otherwise = Nothing
       where
