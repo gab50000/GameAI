@@ -7,7 +7,6 @@ import Data.Foldable (toList)
 import Data.List (elemIndex)
 import Data.Sequence hiding (Empty, (:<))
 import qualified Data.Sequence as Sq
-import Data.Text (Text, pack, strip, unpack)
 import Game
 import Prelude hiding (Either (..), replicate, reverse, take)
 import qualified Prelude as List
@@ -233,10 +232,14 @@ parseMove input
     strippedInput = List.filter (not . isSpace) input
     isValidLetter :: Char -> Bool
     isValidLetter char = elem (toLower char) letters
+    isValidNumber :: Int -> Bool
+    isValidNumber num = elem num [1 .. 8]
     letters = ['a' .. 'h']
     convert :: String -> Maybe (Move Checkers)
     convert (c1 : d1 : c2 : d2 : _)
-      | (Just i2, Just ii2) <- (i, ii) = Just ((i2, j), (ii2, jj))
+      | (Just i2, Just ii2) <- (i, ii),
+        all isValidNumber [j, jj] =
+        Just ((i2, j - 1), (ii2, jj - 1))
       | otherwise = Nothing
       where
         i = elemIndex c1 letters
