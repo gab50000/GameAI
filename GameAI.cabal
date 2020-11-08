@@ -1,0 +1,76 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 942acc8e1718d6107b938d77810dcdb8f30d34d9618b2b76c50e99348c177316
+
+name:           GameAI
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/GameAI#readme>
+homepage:       https://github.com/githubuser/GameAI#readme
+bug-reports:    https://github.com/githubuser/GameAI/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2020 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/GameAI
+
+library
+  exposed-modules:
+      Game
+      Lib
+  other-modules:
+      Paths_GameAI
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+  default-language: Haskell2010
+
+executable GameAI-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_GameAI
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      GameAI
+    , base >=4.7 && <5
+  default-language: Haskell2010
+
+executable tictactoe
+  main-is: main.hs
+  other-modules:
+      Main
+      Paths_GameAI
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      GameAI
+    , base >=4.7 && <5
+  default-language: Haskell2010
+
+test-suite GameAI-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_GameAI
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      GameAI
+    , base >=4.7 && <5
+  default-language: Haskell2010

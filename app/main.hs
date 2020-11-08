@@ -1,5 +1,7 @@
 {-# LANGUAGE TypeFamilies #-}
 
+module Main where
+
 import Game
 import System.Exit
 import Prelude

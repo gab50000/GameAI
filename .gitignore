@@ -1,3 +1,2 @@
-*
-!*.hs
-!.gitignore
+.stack-work/
+*~
