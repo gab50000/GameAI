@@ -214,7 +214,6 @@ getDiagonalPosition (i, j) Up Left = Just (i - 1, j - 1)
 getDiagonalPosition (i, j) Up Right = Just (i - 1, j + 1)
 getDiagonalPosition (i, j) Down Left = Just (i + 1, j + 1)
 getDiagonalPosition (i, j) Down Right = Just (i + 1, j - 1)
-getDiagonalPosition _ _ _ = Nothing
 
 removePiece :: Board -> Position -> Board
 removePiece board pos = insertPiece board pos Nothing
@@ -251,3 +250,14 @@ parseMove input
         j = read [d1] :: Int
         ii = elemIndex c2 letters
         jj = read [d2] :: Int
+
+gameAgainstAI :: Checkers -> IO ()
+gameAgainstAI state = do
+  printBoard (board state)
+  playerInput <- getLine
+  let move = parseMove playerInput
+  print move
+
+main = gameAgainstAI initialState
+  where
+    initialState = Checkers initialBoard White
