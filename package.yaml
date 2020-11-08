@@ -36,7 +36,7 @@ executables:
     dependencies:
     - GameAI
   tictactoe:
-    main:                main.hs
+    main:                tictactoe.hs
     source-dirs:         app
     ghc-options:
     - -threaded

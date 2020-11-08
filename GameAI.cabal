@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 942acc8e1718d6107b938d77810dcdb8f30d34d9618b2b76c50e99348c177316
+-- hash: 7d14cdf41affce00d1e606fc4c339721fb3e7250d3c6ad48933915ea8a73cd08
 
 name:           GameAI
 version:        0.1.0.0
@@ -50,7 +50,7 @@ executable GameAI-exe
   default-language: Haskell2010
 
 executable tictactoe
-  main-is: main.hs
+  main-is: tictactoe.hs
   other-modules:
       Main
       Paths_GameAI
