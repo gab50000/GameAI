@@ -2,6 +2,8 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 
+module Checkers where
+
 import Data.Char (isDigit, isSpace, toLower)
 import Data.Foldable (toList)
 import Data.List (elemIndex)
@@ -257,7 +259,3 @@ gameAgainstAI state = do
   playerInput <- getLine
   let move = parseMove playerInput
   print move
-
-main = gameAgainstAI initialState
-  where
-    initialState = Checkers initialBoard White
