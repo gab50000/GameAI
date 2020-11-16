@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7045dae712ad3ec6b5698a29992b9ff782a3580a20f60683249e7503c8f7ddfe
+-- hash: 4fd986db2210437c4aa146a1d9fefe4eacfb3db5ab2bafea3e1fd1ba2f974f5a
 
 name:           GameAI
 version:        0.1.0.0
@@ -55,7 +55,7 @@ executable tictactoe
   main-is: tictactoe.hs
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -static
   build-depends:
       GameAI
     , base >=4.7 && <5

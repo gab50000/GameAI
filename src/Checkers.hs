@@ -4,7 +4,7 @@
 
 module Checkers where
 
-import Data.Char (isDigit, isSpace, toLower)
+import Data.Char (chr, isDigit, isSpace, toLower)
 import Data.Foldable (toList)
 import Data.List (elemIndex)
 import Data.List.Index (indexed)
@@ -28,7 +28,7 @@ instance GameState Checkers where
       currentBoard = board state
       nextBoard = makeMove currentBoard move
       currentPlayer = player state
-      currentOponent = getOppositeColor currentPlayer
+      currentOponent = oppositeColor currentPlayer
 
 getScoreUpToDepth :: Int -> Checkers -> Move Checkers -> Score
 getScoreUpToDepth n state move
@@ -38,7 +38,7 @@ getScoreUpToDepth n state move
     currentBoard = board state
     nextBoard = makeMove currentBoard move
     currentPlayer = player state
-    currentOpponent = getOppositeColor currentPlayer
+    currentOpponent = oppositeColor currentPlayer
 
 data Checkers = Checkers
   { board :: Board,
@@ -68,9 +68,9 @@ data Direction = Up | Down deriving (Eq)
 
 data Side = Left | Right deriving (Eq)
 
-getOppositeColor :: Color -> Color
-getOppositeColor Black = White
-getOppositeColor White = Black
+oppositeColor :: Color -> Color
+oppositeColor Black = White
+oppositeColor White = Black
 
 exampleBoard :: Board
 exampleBoard =
@@ -112,16 +112,28 @@ printPiece (Just (Piece White King)) = "♚"
 
 printBoard :: Board -> IO ()
 printBoard Empty = return ()
-printBoard (row :< rest) = do
-  printRow row
-  printBoard rest
+printBoard board = do
+  putStrLn $ concat (map show [1 .. 8])
+  printBoardRecursively indexedBoard
+  where
+    letters = fromList ['A' .. 'Z']
+    printBoardRecursively :: [(Int, Seq (Maybe Piece))] -> IO ()
+    printBoardRecursively [] = return ()
+    printBoardRecursively ((i, row) : rest) = do
+      let letter = index letters i
+      putStr [letter, ' ', ' ']
+      printRow row
+      putStr [' ', letter]
+      putStrLn ""
+      printBoardRecursively rest
+
+    indexedBoard = indexed $ toList board
 
 flipBoard :: Board -> Board
 flipBoard board = reverse (fmap reverse board)
 
 printRow :: Seq (Maybe Piece) -> IO ()
 printRow Empty = do
-  putStrLn ""
   return ()
 printRow (x :< xs) = do
   putStr (printPiece x ++ "|")
@@ -185,7 +197,7 @@ getJump board pos dir side
   | destination /= Nothing = []
   | Just player_ <- maybePlayer_,
     playerColor <- color player_,
-    oppositePlayer <- getOppositeColor playerColor,
+    oppositePlayer <- oppositeColor playerColor,
     Just enemyPos <- diag1,
     Just playerOnDiag <- getPiece board enemyPos,
     color playerOnDiag == oppositePlayer,
@@ -256,7 +268,10 @@ parseMove input
 
 gameAgainstAI :: Checkers -> IO ()
 gameAgainstAI state = do
-  printBoard (board state)
+  printBoard $ board state
   playerInput <- getLine
-  let move = parseMove playerInput
-  print move
+  let maybeMove = parseMove playerInput
+  let newBoard = case maybeMove of
+        Just move -> makeMove (board state) move
+        Nothing -> board state
+  printBoard newBoard
