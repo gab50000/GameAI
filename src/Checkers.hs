@@ -178,7 +178,7 @@ makeMove board ((i, j), (ii, jj))
   where
     currentPiece = board `index` i `index` j
     boardNewPos = insertPiece board (ii, jj) currentPiece
-    boardNewPosMinusOldPos = removePiece boardNewPos (ii, jj)
+    boardNewPosMinusOldPos = removePiece boardNewPos (i, j)
 
 getJump :: Board -> Position -> Direction -> Side -> [Move Checkers]
 getJump board pos dir side
