@@ -8,8 +8,10 @@ import Data.Char (chr, isDigit, isSpace, toLower)
 import Data.Foldable (toList)
 import Data.List (elemIndex)
 import Data.List.Index (indexed)
+import Data.Maybe (isNothing)
 import Data.Sequence hiding (Empty, (:<))
 import qualified Data.Sequence as Sq
+import Debug.Trace (trace)
 import Game
 import Prelude hiding (Either (..), replicate, reverse, take)
 import qualified Prelude as List
@@ -269,9 +271,36 @@ parseMove input
 gameAgainstAI :: Checkers -> IO ()
 gameAgainstAI state = do
   printBoard $ board state
-  playerInput <- getLine
-  let maybeMove = parseMove playerInput
-  let newBoard = case maybeMove of
-        Just move -> makeMove (board state) move
-        Nothing -> board state
+  let playerColor = Black
+  move <- waitForMove playerColor (board state)
+  let newBoard = makeMove (board state) move
+
   printBoard newBoard
+  let newState = Checkers {board = newBoard, player = oppositeColor playerColor}
+
+  let aiMove = chooseBestMove newState [] Nothing
+  let finalBoard = makeMove newBoard aiMove
+  printBoard finalBoard
+
+waitForMove :: Color -> Board -> IO (Move Checkers)
+waitForMove playerColor board = do
+  moveOfCorrectColor playerColor
+  where
+    parsedMove :: IO (Move Checkers)
+    parsedMove = do
+      playerInput <- readLn
+      let maybeMove = parseMove playerInput
+      case maybeMove of
+        Just mv -> return mv
+        Nothing -> waitForMove playerColor board
+
+    moveOfCorrectColor :: Color -> IO (Move Checkers)
+    moveOfCorrectColor playerColor = do
+      move <- parsedMove
+      let from = fst move
+      let to = snd move
+      let fromPiece = getPiece board from
+      let toPiece = getPiece board to
+      case (fromPiece, toPiece) of
+        (Just (Piece playerColor _), Nothing) -> return (move)
+        _ -> moveOfCorrectColor playerColor
