@@ -115,8 +115,9 @@ printPiece (Just (Piece White King)) = "♚"
 printBoard :: Board -> IO ()
 printBoard Empty = return ()
 printBoard board = do
-  putStrLn $ concat (map show [1 .. 8])
+  printNumbers
   printBoardRecursively indexedBoard
+  printNumbers
   where
     letters = fromList ['A' .. 'Z']
     printBoardRecursively :: [(Int, Seq (Maybe Piece))] -> IO ()
@@ -130,6 +131,7 @@ printBoard board = do
       printBoardRecursively rest
 
     indexedBoard = indexed $ toList board
+    printNumbers = putStrLn $ "  " ++ concat (map (\num -> " " ++ (show num)) [1 .. 8])
 
 flipBoard :: Board -> Board
 flipBoard board = reverse (fmap reverse board)
