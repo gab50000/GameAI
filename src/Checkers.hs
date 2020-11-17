@@ -25,12 +25,7 @@ pattern xs :> x <- (Sq.viewr -> xs Sq.:> x) where (:>) = (Sq.|>)
 instance GameState Checkers where
   type Move Checkers = (From, To)
 
-  getScore state move = List.length (getPositions nextBoard currentPlayer) - List.length (getPositions nextBoard currentOponent)
-    where
-      currentBoard = board state
-      nextBoard = makeMove currentBoard move
-      currentPlayer = player state
-      currentOponent = oppositeColor currentPlayer
+  getScore = getScoreUpToDepth 1
 
 getScoreUpToDepth :: Int -> Checkers -> Move Checkers -> Score
 getScoreUpToDepth n state move
