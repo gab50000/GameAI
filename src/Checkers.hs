@@ -285,11 +285,11 @@ waitForMove playerColor board = do
   where
     parsedMove :: IO (Move Checkers)
     parsedMove = do
-      playerInput <- readLn
+      playerInput <- getLine
       let maybeMove = parseMove playerInput
       case maybeMove of
         Just mv -> return mv
-        Nothing -> waitForMove playerColor board
+        Nothing -> print "Invalid move!" >> parsedMove
 
     moveOfCorrectColor :: Color -> IO (Move Checkers)
     moveOfCorrectColor playerColor = do
@@ -300,4 +300,4 @@ waitForMove playerColor board = do
       let toPiece = getPiece board to
       case (fromPiece, toPiece) of
         (Just (Piece playerColor _), Nothing) -> return (move)
-        _ -> moveOfCorrectColor playerColor
+        _ -> print "Invalid move!" >> moveOfCorrectColor playerColor
