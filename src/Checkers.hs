@@ -272,12 +272,15 @@ gameAgainstAI :: Checkers -> IO ()
 gameAgainstAI state = do
   printBoard $ board state
   let playerColor = Black
+  let aiColor = oppositeColor playerColor
+  let aiDirection = Down
   newBoard <- waitForMove playerColor (board state)
 
   printBoard newBoard
   let newState = Checkers {board = newBoard, player = oppositeColor playerColor}
 
-  let aiMove = chooseBestMove newState [] Nothing
+  let validMoves = getAllMoves newBoard aiColor aiDirection
+  let aiMove = chooseBestMove newState validMoves Nothing
   let maybeFinalBoard = makeMove newBoard aiMove
   case maybeFinalBoard of
     Nothing -> print "Nothing"
