@@ -4,14 +4,12 @@
 
 module Checkers where
 
-import Data.Char (chr, isDigit, isSpace, toLower)
+import Data.Char (isDigit, isSpace, toLower)
 import Data.Foldable (toList)
 import Data.List (elemIndex)
 import Data.List.Index (indexed)
-import Data.Maybe (isNothing)
 import Data.Sequence hiding (Empty, (:<))
 import qualified Data.Sequence as Sq
-import Debug.Trace (trace)
 import Game
 import Prelude hiding (Either (..), replicate, reverse, take)
 import qualified Prelude as List
