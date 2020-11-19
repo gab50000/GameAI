@@ -29,11 +29,13 @@ instance GameState Checkers where
 
 getScoreUpToDepth :: Int -> Checkers -> Move Checkers -> Score
 getScoreUpToDepth n state move
-  | n == 0 = List.length (getPositions nextBoard currentPlayer) - List.length (getPositions nextBoard currentOpponent)
+  | n == 0,
+    Just nextBoard <- maybeNextBoard =
+    List.length (getPositions nextBoard currentPlayer) - List.length (getPositions nextBoard currentOpponent)
   | otherwise = 0
   where
     currentBoard = board state
-    nextBoard = makeMove currentBoard move
+    maybeNextBoard = makeMove currentBoard move
     currentPlayer = player state
     currentOpponent = oppositeColor currentPlayer
 
@@ -182,10 +184,11 @@ getPositions board color_
                 True
               | otherwise = False
 
-makeMove :: Board -> Move Checkers -> Board
+makeMove :: Board -> Move Checkers -> Maybe Board
 makeMove board ((i, j), (ii, jj))
-  | abs (i - ii) == 2 = removePiece boardNewPosMinusOldPos ((i + ii) `div` 2, (j + jj) `div` 2)
-  | abs (i - ii) == 1 = boardNewPosMinusOldPos
+  | abs (i - ii) == 2 = Just $ removePiece boardNewPosMinusOldPos ((i + ii) `div` 2, (j + jj) `div` 2)
+  | abs (i - ii) == 1 = Just boardNewPosMinusOldPos
+  | otherwise = Nothing
   where
     currentPiece = board `index` i `index` j
     boardNewPos = insertPiece board (ii, jj) currentPiece
@@ -269,19 +272,24 @@ gameAgainstAI :: Checkers -> IO ()
 gameAgainstAI state = do
   printBoard $ board state
   let playerColor = Black
-  move <- waitForMove playerColor (board state)
-  let newBoard = makeMove (board state) move
+  newBoard <- waitForMove playerColor (board state)
 
   printBoard newBoard
   let newState = Checkers {board = newBoard, player = oppositeColor playerColor}
 
   let aiMove = chooseBestMove newState [] Nothing
-  let finalBoard = makeMove newBoard aiMove
-  printBoard finalBoard
+  let maybeFinalBoard = makeMove newBoard aiMove
+  case maybeFinalBoard of
+    Nothing -> print "Nothing"
+    Just finalBoard -> printBoard finalBoard
 
-waitForMove :: Color -> Board -> IO (Move Checkers)
+waitForMove :: Color -> Board -> IO (Board)
 waitForMove playerColor board = do
-  moveOfCorrectColor playerColor
+  move <- moveOfCorrectColor playerColor
+  let maybeBoard = makeMove board move
+  case maybeBoard of
+    Nothing -> print "Invalid move!" >> waitForMove playerColor board
+    Just newBoard -> return newBoard
   where
     parsedMove :: IO (Move Checkers)
     parsedMove = do
