@@ -23,6 +23,7 @@ dependencies:
 - base >= 4.7 && < 5
 - containers
 - ilist
+- ansi-terminal
 
 library:
   source-dirs: src

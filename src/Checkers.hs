@@ -12,6 +12,7 @@ import Data.Maybe (isJust)
 import Data.Sequence hiding (Empty, (:<))
 import qualified Data.Sequence as Sq
 import Game
+import System.Console.ANSI (clearScreen)
 import Prelude hiding (Either (..), replicate, reverse, take)
 import qualified Prelude as List
 
@@ -285,6 +286,7 @@ parseMove input
 
 gameAgainstAI :: Checkers -> IO ()
 gameAgainstAI state = do
+  clearScreen
   printBoard $ board state
   let playerColor = player state
   let playerDirection = direction state
@@ -292,6 +294,7 @@ gameAgainstAI state = do
   let aiDirection = Down
   newBoard <- waitForMove playerColor (board state) playerDirection
 
+  clearScreen
   printBoard newBoard
   let newState = Checkers {board = newBoard, player = oppositeColor playerColor, direction = oppositeDirection playerDirection}
 
