@@ -283,8 +283,10 @@ gameAgainstAI state = do
   let aiMove = chooseBestMove newState validMoves Nothing
   let maybeFinalBoard = makeMove newBoard aiMove
   case maybeFinalBoard of
-    Nothing -> print "Nothing"
-    Just finalBoard -> printBoard finalBoard
+    Nothing -> print "Game Over"
+    Just finalBoard -> do
+      let finalState = Checkers finalBoard playerColor
+      gameAgainstAI finalState
 
 waitForMove :: Color -> Board -> IO (Board)
 waitForMove playerColor board = do
