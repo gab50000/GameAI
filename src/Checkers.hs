@@ -275,9 +275,10 @@ gameAgainstAI :: Checkers -> IO ()
 gameAgainstAI state = do
   printBoard $ board state
   let playerColor = Black
+  let playerDirection = Up
   let aiColor = oppositeColor playerColor
   let aiDirection = Down
-  newBoard <- waitForMove playerColor (board state)
+  newBoard <- waitForMove playerColor (board state) playerDirection
 
   printBoard newBoard
   let newState = Checkers {board = newBoard, player = oppositeColor playerColor}
@@ -291,14 +292,17 @@ gameAgainstAI state = do
       let finalState = Checkers finalBoard playerColor
       gameAgainstAI finalState
 
--- TODO: refactor and use getAllMoves to get a list of valid moves
-waitForMove :: Color -> Board -> IO Board
-waitForMove playerColor board = do
-  move <- moveOfCorrectColor playerColor
-  let maybeBoard = makeMove board move
-  case maybeBoard of
-    Nothing -> print "Invalid move!" >> waitForMove playerColor board
-    Just newBoard -> return newBoard
+waitForMove :: Color -> Board -> Direction -> IO Board
+waitForMove playerColor board dir = do
+  move <- parsedMove
+  let possibleMoves = getAllMoves board playerColor dir
+  if move `elem` possibleMoves
+    then do
+      let maybeBoard = makeMove board move
+      case maybeBoard of
+        Nothing -> print "Invalid move!" >> waitForMove playerColor board dir
+        Just newBoard -> return newBoard
+    else print "Invalid move!" >> waitForMove playerColor board dir
   where
     parsedMove :: IO (Move Checkers)
     parsedMove = do
@@ -307,14 +311,3 @@ waitForMove playerColor board = do
       case maybeMove of
         Just mv -> return mv
         Nothing -> print "Invalid move!" >> parsedMove
-
-    moveOfCorrectColor :: Color -> IO (Move Checkers)
-    moveOfCorrectColor playerColor = do
-      move <- parsedMove
-      let from = fst move
-      let to = snd move
-      let fromPiece = getPiece board from
-      let toPiece = getPiece board to
-      case (fromPiece, toPiece) of
-        (Just (Piece playerColor _), Nothing) -> return move
-        _ -> print "Invalid move!" >> moveOfCorrectColor playerColor
