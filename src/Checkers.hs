@@ -8,6 +8,7 @@ import Data.Char (isDigit, isSpace, toLower)
 import Data.Foldable (toList)
 import Data.List (elemIndex)
 import Data.List.Index (indexed)
+import Data.Maybe (isJust)
 import Data.Sequence hiding (Empty, (:<))
 import qualified Data.Sequence as Sq
 import Game
@@ -84,16 +85,15 @@ initialBoard =
   fromList $
     map
       fromList
-      ( [ multiply 4 [Nothing, Just (Piece White Man)],
-          multiply 4 [Just (Piece White Man), Nothing],
-          multiply 4 [Nothing, Just (Piece White Man)],
-          List.replicate 8 Nothing,
-          List.replicate 8 Nothing,
-          multiply 4 [Just (Piece Black Man), Nothing],
-          multiply 4 [Nothing, Just (Piece Black Man)],
-          multiply 4 [Just (Piece Black Man), Nothing]
-        ]
-      )
+      [ multiply 4 [Nothing, Just (Piece White Man)],
+        multiply 4 [Just (Piece White Man), Nothing],
+        multiply 4 [Nothing, Just (Piece White Man)],
+        List.replicate 8 Nothing,
+        List.replicate 8 Nothing,
+        multiply 4 [Just (Piece Black Man), Nothing],
+        multiply 4 [Nothing, Just (Piece Black Man)],
+        multiply 4 [Just (Piece Black Man), Nothing]
+      ]
   where
     multiply :: Int -> [a] -> [a]
     multiply n list
@@ -126,7 +126,7 @@ printBoard board = do
       printBoardRecursively rest
 
     indexedBoard = indexed $ toList board
-    printNumbers = putStrLn $ "  " ++ concat (map (\num -> " " ++ (show num)) [1 .. 8])
+    printNumbers = putStrLn $ "  " ++ concatMap (\num -> " " ++ show num) [1 .. 8]
 
 flipBoard :: Board -> Board
 flipBoard board = reverse (fmap reverse board)
@@ -160,7 +160,7 @@ getMove board_ pos dir side
     diagPos = getDiagonalPosition (i, j) dir side
 
 getAllMoves :: Board -> Color -> Direction -> [Move Checkers]
-getAllMoves board playerColor direction = concat $ map getMovesBoardDirection playerPositions
+getAllMoves board playerColor direction = concatMap getMovesBoardDirection playerPositions
   where
     getMovesBoardDirection pos = getMoves board pos direction
     playerPositions = getPositions board playerColor
@@ -173,7 +173,7 @@ getPositions board color_
     getColIndices :: Int -> Seq (Maybe Piece) -> [Position]
     getColIndices i row = [(i, j) | j <- colIndices]
       where
-        colIndices = findIndicesL (hasColor) row
+        colIndices = findIndicesL hasColor row
           where
             hasColor :: Maybe Piece -> Bool
             hasColor maybePiece
@@ -194,7 +194,7 @@ makeMove board ((i, j), (ii, jj))
 
 getJump :: Board -> Position -> Direction -> Side -> [Move Checkers]
 getJump board pos dir side
-  | destination /= Nothing = []
+  | isJust destination = []
   | Just player_ <- maybePlayer_,
     playerColor <- color player_,
     oppositePlayer <- oppositeColor playerColor,
@@ -215,10 +215,10 @@ getJump board pos dir side
 getPiece :: Board -> Position -> Maybe Piece
 getPiece board_ (i, j) = board_ `index` i `index` j
 
-getDiagonalPosition :: Position -> Direction -> Side -> Maybe (Position)
+getDiagonalPosition :: Position -> Direction -> Side -> Maybe Position
 -- White fields are no valid fields
 getDiagonalPosition (i, j) _ _
-  | mod (i + j) 2 == 0 = Nothing
+  | even (i + j) = Nothing
 getDiagonalPosition (0, _) Up _ = Nothing
 getDiagonalPosition (7, _) Down _ = Nothing
 getDiagonalPosition (_, 0) Up Left = Nothing
@@ -243,21 +243,21 @@ parseMove :: String -> Maybe (Move Checkers)
 parseMove input
   | (c1 : d1 : c2 : d2 : rest) <- strippedInput,
     [] <- rest,
-    all isValidLetter (c1, c2),
-    all isDigit (d1, d2) =
+    isValidLetter c1 && isValidLetter c2,
+    isDigit d1 && isDigit d2 =
     convert input
   | otherwise = Nothing
   where
     strippedInput = List.filter (not . isSpace) input
     isValidLetter :: Char -> Bool
-    isValidLetter char = elem (toLower char) letters
+    isValidLetter char = toLower char `elem` letters
     isValidNumber :: Int -> Bool
-    isValidNumber num = elem num [1 .. 8]
+    isValidNumber num = num `elem` [1 .. 8]
     letters = ['a' .. 'h']
     convert :: String -> Maybe (Move Checkers)
     convert (c1 : d1 : c2 : d2 : _)
       | (Just i2, Just ii2) <- (i, ii),
-        all isValidNumber (j, jj) =
+        isValidNumber j && isValidNumber jj =
         Just ((i2, j - 1), (ii2, jj - 1))
       | otherwise = Nothing
       where
@@ -286,7 +286,8 @@ gameAgainstAI state = do
       let finalState = Checkers finalBoard playerColor
       gameAgainstAI finalState
 
-waitForMove :: Color -> Board -> IO (Board)
+-- TODO: refactor and use getAllMoves to get a list of valid moves
+waitForMove :: Color -> Board -> IO Board
 waitForMove playerColor board = do
   move <- moveOfCorrectColor playerColor
   let maybeBoard = makeMove board move
@@ -310,5 +311,5 @@ waitForMove playerColor board = do
       let fromPiece = getPiece board from
       let toPiece = getPiece board to
       case (fromPiece, toPiece) of
-        (Just (Piece playerColor _), Nothing) -> return (move)
+        (Just (Piece playerColor _), Nothing) -> return move
         _ -> print "Invalid move!" >> moveOfCorrectColor playerColor
