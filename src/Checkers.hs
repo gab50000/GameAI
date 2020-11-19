@@ -24,23 +24,31 @@ pattern xs :> x <- (Sq.viewr -> xs Sq.:> x) where (:>) = (Sq.|>)
 instance GameState Checkers where
   type Move Checkers = (From, To)
 
-  getScore = getScoreUpToDepth 1
+  getScore state move = getScoreUpToDepth 4 state playerColor move
+    where
+      playerColor = player state
 
-getScoreUpToDepth :: Int -> Checkers -> Move Checkers -> Score
-getScoreUpToDepth n state move
+getScoreUpToDepth :: Int -> Checkers -> Color -> Move Checkers -> Score
+getScoreUpToDepth n state playerColor move
   | n == 0,
     Just nextBoard <- maybeNextBoard =
-    List.length (getPositions nextBoard currentPlayer) - List.length (getPositions nextBoard currentOpponent)
-  | otherwise = 0
+    List.length (getPositions nextBoard playerColor) - List.length (getPositions nextBoard opponentColor)
+  | n > 0,
+    Just nextBoard <- maybeNextBoard =
+    - (maximum $ map (getScoreUpToDepth (n -1) (Checkers nextBoard nextPlayer nextDirection) playerColor) (getAllMoves nextBoard nextPlayer nextDirection))
   where
     currentBoard = board state
-    maybeNextBoard = makeMove currentBoard move
     currentPlayer = player state
-    currentOpponent = oppositeColor currentPlayer
+    currentDirection = direction state
+    maybeNextBoard = makeMove currentBoard move
+    opponentColor = oppositeColor playerColor
+    nextPlayer = oppositeColor currentPlayer
+    nextDirection = oppositeDirection currentDirection
 
 data Checkers = Checkers
   { board :: Board,
-    player :: Color
+    player :: Color,
+    direction :: Direction
   }
 
 type Position = (Int, Int)
@@ -69,6 +77,10 @@ data Side = Left | Right deriving (Eq)
 oppositeColor :: Color -> Color
 oppositeColor Black = White
 oppositeColor White = Black
+
+oppositeDirection :: Direction -> Direction
+oppositeDirection Up = Down
+oppositeDirection Down = Up
 
 exampleBoard :: Board
 exampleBoard =
@@ -274,14 +286,14 @@ parseMove input
 gameAgainstAI :: Checkers -> IO ()
 gameAgainstAI state = do
   printBoard $ board state
-  let playerColor = Black
-  let playerDirection = Up
+  let playerColor = player state
+  let playerDirection = direction state
   let aiColor = oppositeColor playerColor
   let aiDirection = Down
   newBoard <- waitForMove playerColor (board state) playerDirection
 
   printBoard newBoard
-  let newState = Checkers {board = newBoard, player = oppositeColor playerColor}
+  let newState = Checkers {board = newBoard, player = oppositeColor playerColor, direction = oppositeDirection playerDirection}
 
   let validMoves = getAllMoves newBoard aiColor aiDirection
   let aiMove = chooseBestMove newState validMoves Nothing
@@ -289,7 +301,7 @@ gameAgainstAI state = do
   case maybeFinalBoard of
     Nothing -> print "Game Over"
     Just finalBoard -> do
-      let finalState = Checkers finalBoard playerColor
+      let finalState = Checkers finalBoard playerColor playerDirection
       gameAgainstAI finalState
 
 waitForMove :: Color -> Board -> Direction -> IO Board

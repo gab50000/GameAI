@@ -4,4 +4,4 @@ import Checkers
 
 main = gameAgainstAI initialState
   where
-    initialState = Checkers initialBoard White
+    initialState = Checkers initialBoard Black Up
