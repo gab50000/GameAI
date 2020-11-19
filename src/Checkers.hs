@@ -160,9 +160,10 @@ getMove board_ pos dir side
     diagPos = getDiagonalPosition (i, j) dir side
 
 getAllMoves :: Board -> Color -> Direction -> [Move Checkers]
-getAllMoves board playerColor direction = concatMap getMovesBoardDirection playerPositions
+getAllMoves board playerColor direction = concatMap getMovesBoardDirection playerPositions ++ concatMap getJumpsBoardDirection playerPositions
   where
     getMovesBoardDirection pos = getMoves board pos direction
+    getJumpsBoardDirection pos = getJumps board pos direction
     playerPositions = getPositions board playerColor
 
 getPositions :: Board -> Color -> [Position]
@@ -191,6 +192,10 @@ makeMove board ((i, j), (ii, jj))
     currentPiece = board `index` i `index` j
     boardNewPos = insertPiece board (ii, jj) currentPiece
     boardNewPosMinusOldPos = removePiece boardNewPos (i, j)
+
+getJumps :: Board -> Position -> Direction -> [Move Checkers]
+getJumps board_ pos dir =
+  getJump board_ pos dir Left ++ getJump board_ pos dir Right
 
 getJump :: Board -> Position -> Direction -> Side -> [Move Checkers]
 getJump board pos dir side
