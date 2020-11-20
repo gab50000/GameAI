@@ -173,8 +173,13 @@ getMove board_ pos dir side
     diagPos = getDiagonalPosition (i, j) dir side
 
 getAllMoves :: Board -> Color -> Direction -> [Move Checkers]
-getAllMoves board playerColor direction = concatMap getMovesBoardDirection playerPositions ++ concatMap getJumpsBoardDirection playerPositions
+getAllMoves board playerColor direction
+  -- If it is possible to beat another piece, a normal move is not allowed
+  | not (Prelude.null allJumps) = allJumps
+  | otherwise = allJumps ++ allMoves
   where
+    allJumps = concatMap getJumpsBoardDirection playerPositions
+    allMoves = concatMap getMovesBoardDirection playerPositions
     getMovesBoardDirection pos = getMoves board pos direction
     getJumpsBoardDirection pos = getJumps board pos direction
     playerPositions = getPositions board playerColor
