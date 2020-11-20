@@ -207,8 +207,14 @@ makeMove board ((i, j), (ii, jj))
   | abs (i - ii) == 1 = Just boardNewPosMinusOldPos
   | otherwise = Nothing
   where
+    newPiece
+      | ii `elem` [0, 7],
+        Just (Piece color Man) <- currentPiece =
+        Just (Piece color King)
+      | otherwise = currentPiece
+
     currentPiece = board `index` i `index` j
-    boardNewPos = insertPiece board (ii, jj) currentPiece
+    boardNewPos = insertPiece board (ii, jj) newPiece
     boardNewPosMinusOldPos = removePiece boardNewPos (i, j)
 
 getJumps :: Board -> Position -> Direction -> [Move Checkers]
