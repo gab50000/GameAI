@@ -8,7 +8,7 @@ import Data.Char (isDigit, isSpace, toLower)
 import Data.Foldable (toList)
 import Data.List (elemIndex)
 import Data.List.Index (indexed)
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, isNothing)
 import Data.Sequence hiding (Empty, (:<))
 import qualified Data.Sequence as Sq
 import Game
@@ -33,7 +33,7 @@ getScoreUpToDepth :: Int -> Checkers -> Color -> Move Checkers -> Score
 getScoreUpToDepth n state playerColor move
   | n == 0,
     Just nextBoard <- maybeNextBoard =
-    List.length (getPositions nextBoard playerColor) - List.length (getPositions nextBoard opponentColor)
+    List.length (getPositions nextBoard playerColor Man ++ getPositions nextBoard playerColor King) - List.length (getPositions nextBoard opponentColor Man ++ getPositions nextBoard opponentColor King)
   | n > 0,
     Just nextBoard <- maybeNextBoard =
     - (maximum $ map (getScoreUpToDepth (n -1) (Checkers nextBoard nextPlayer nextDirection) playerColor) (getAllMoves nextBoard nextPlayer nextDirection))
@@ -107,11 +107,20 @@ initialBoard =
         multiply 4 [Nothing, Just (Piece Black Man)],
         multiply 4 [Just (Piece Black Man), Nothing]
       ]
+
+multiply :: Int -> [a] -> [a]
+multiply n list
+  | n > 0 = list ++ multiply (n -1) list
+  | otherwise = []
+
+emptyBoard :: Board
+emptyBoard = fromList $ multiply 8 [fromList (multiply 8 [Nothing])]
+
+kingBoard :: Board
+kingBoard = b2
   where
-    multiply :: Int -> [a] -> [a]
-    multiply n list
-      | n > 0 = list ++ multiply (n -1) list
-      | otherwise = []
+    b2 = insertPiece b1 (6, 1) (Just (Piece Black Man))
+    b1 = insertPiece emptyBoard (3, 4) (Just (Piece White King))
 
 printPiece :: Maybe Piece -> String
 printPiece Nothing = " "
@@ -172,20 +181,48 @@ getMove board_ pos dir side
     (i, j) = pos
     diagPos = getDiagonalPosition (i, j) dir side
 
+getKingMoves :: Board -> Position -> Direction -> Side -> [To]
+getKingMoves board_ pos dir side
+  | Just (i, j) <- diagPos,
+    Nothing <- board_ `index` i `index` j =
+    (i, j) : getKingMoves board_ (i, j) dir side
+  | otherwise = []
+  where
+    diagPos = getDiagonalPosition pos dir side
+
+getKingJumps :: Board -> Position -> Direction -> Side -> [To]
+getKingJumps board_ pos dir side
+  | Just diagPos <- maybeDiagPos,
+    Just nextDiagPos <- getDiagonalPosition diagPos dir side,
+    Just _ <- getPiece board_ diagPos,
+    Nothing <- getPiece board_ nextDiagPos =
+    [nextDiagPos]
+  | Just diagPos <- maybeDiagPos,
+    Nothing <- getPiece board_ diagPos =
+    getKingJumps board_ diagPos dir side
+  | otherwise = []
+  where
+    maybeDiagPos = getDiagonalPosition pos dir side
+
 getAllMoves :: Board -> Color -> Direction -> [Move Checkers]
 getAllMoves board playerColor direction
   -- If it is possible to beat another piece, a normal move is not allowed
   | not (Prelude.null allJumps) = allJumps
   | otherwise = allJumps ++ allMoves
   where
-    allJumps = concatMap getJumpsBoardDirection playerPositions
-    allMoves = concatMap getMovesBoardDirection playerPositions
+    allJumps = manJumps ++ kingJumps
+    allMoves = manMoves ++ kingMoves
+    manJumps = concatMap getJumpsBoardDirection manPositions
+    manMoves = concatMap getMovesBoardDirection manPositions
+    kingMoves = [(pos, dest) | dir <- [Up, Down], sd <- [Left, Right], pos <- kingPositions, dest <- getKingMoves board pos dir sd]
+    kingJumps = [(pos, dest) | dir <- [Up, Down], sd <- [Left, Right], pos <- kingPositions, dest <- getKingJumps board pos dir sd]
     getMovesBoardDirection pos = getMoves board pos direction
     getJumpsBoardDirection pos = getJumps board pos direction
-    playerPositions = getPositions board playerColor
+    manPositions = getPositions board playerColor Man
+    kingPositions = getPositions board playerColor King
 
-getPositions :: Board -> Color -> [Position]
-getPositions board color_
+getPositions :: Board -> Color -> PieceKind -> [Position]
+getPositions board color_ pieceKind
   | board == Empty = []
   | otherwise = toList $ concat $ mapWithIndex getColIndices board
   where
@@ -196,14 +233,12 @@ getPositions board color_
           where
             hasColor :: Maybe Piece -> Bool
             hasColor maybePiece
-              | Just piece <- maybePiece,
-                color piece == color_ =
-                True
+              | Just (Piece color_ pieceKind) == maybePiece = True
               | otherwise = False
 
 makeMove :: Board -> Move Checkers -> Maybe Board
 makeMove board ((i, j), (ii, jj))
-  | abs (i - ii) == 2 = Just $ removePiece boardNewPosMinusOldPos ((i + ii) `div` 2, (j + jj) `div` 2)
+  | abs (i - ii) >= 2 = Just $ removePiece boardNewPosMinusOldPos (ii + deltaI, jj + deltaJ)
   | abs (i - ii) == 1 = Just boardNewPosMinusOldPos
   | otherwise = Nothing
   where
@@ -216,6 +251,8 @@ makeMove board ((i, j), (ii, jj))
     currentPiece = board `index` i `index` j
     boardNewPos = insertPiece board (ii, jj) newPiece
     boardNewPosMinusOldPos = removePiece boardNewPos (i, j)
+    deltaI = signum (i - ii)
+    deltaJ = signum (j - jj)
 
 getJumps :: Board -> Position -> Direction -> [Move Checkers]
 getJumps board_ pos dir =
@@ -258,6 +295,13 @@ getDiagonalPosition (i, j) Up Left = Just (i - 1, j - 1)
 getDiagonalPosition (i, j) Up Right = Just (i - 1, j + 1)
 getDiagonalPosition (i, j) Down Left = Just (i + 1, j + 1)
 getDiagonalPosition (i, j) Down Right = Just (i + 1, j - 1)
+
+getDiagonalPositions :: Position -> Direction -> Side -> [Position] -> [Position]
+getDiagonalPositions pos dir side positions
+  | Just dp <- diagPos = getDiagonalPositions dp dir side (positions ++ [dp])
+  | otherwise = positions
+  where
+    diagPos = getDiagonalPosition pos dir side
 
 removePiece :: Board -> Position -> Board
 removePiece board pos = insertPiece board pos Nothing
