@@ -31,6 +31,8 @@ instance GameState Checkers where
 
 getScoreUpToDepth :: Int -> Checkers -> Color -> Move Checkers -> Score
 getScoreUpToDepth n state playerColor move
+  | Prelude.null opponentPieces = 100
+  | Prelude.null playerPieces = -100
   | n == 0,
     Just nextBoard <- maybeNextBoard =
     List.length (getPositions nextBoard playerColor Man ++ getPositions nextBoard playerColor King) - List.length (getPositions nextBoard opponentColor Man ++ getPositions nextBoard opponentColor King)
@@ -43,6 +45,8 @@ getScoreUpToDepth n state playerColor move
     currentDirection = direction state
     maybeNextBoard = makeMove currentBoard move
     opponentColor = oppositeColor playerColor
+    opponentPieces = getPositions currentBoard opponentColor Man ++ getPositions currentBoard opponentColor King
+    playerPieces = getPositions currentBoard playerColor Man ++ getPositions currentBoard playerColor King
     nextPlayer = oppositeColor currentPlayer
     nextDirection = oppositeDirection currentDirection
 
