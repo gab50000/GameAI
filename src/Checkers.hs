@@ -11,8 +11,9 @@ import Data.List.Index (indexed)
 import Data.Maybe (isJust, isNothing)
 import Data.Sequence hiding (Empty, (:<))
 import qualified Data.Sequence as Sq
-import Game
+import Game (GameState (..), Score)
 import System.Console.ANSI (clearScreen)
+import System.Time.Extra (sleep)
 import Prelude hiding (Either (..), replicate, reverse, take)
 import qualified Prelude as List
 
@@ -353,8 +354,8 @@ parseMove input
         ii = elemIndex c2 letters
         jj = read [d2] :: Int
 
-gameAgainstAI :: Checkers -> IO ()
-gameAgainstAI state = do
+humanAgainstAI :: Checkers -> IO ()
+humanAgainstAI state = do
   clearScreen
   printBoard $ board state
   let playerColor = player state
@@ -362,19 +363,39 @@ gameAgainstAI state = do
   let aiColor = oppositeColor playerColor
   let aiDirection = Down
   newBoard <- waitForMove playerColor (board state) playerDirection
-
+  let newState = Checkers newBoard aiColor aiDirection
   clearScreen
-  printBoard newBoard
-  let newState = Checkers {board = newBoard, player = oppositeColor playerColor, direction = oppositeDirection playerDirection}
-
-  let validMoves = getAllMoves newBoard aiColor aiDirection
-  let aiMove = chooseBestMove newState validMoves Nothing
-  let maybeFinalBoard = makeMove newBoard aiMove
-  case maybeFinalBoard of
+  printBoard (board newState)
+  let finalState = calculateMoveState newState
+  case finalState of
     Nothing -> print "Game Over"
-    Just finalBoard -> do
-      let finalState = Checkers finalBoard playerColor playerDirection
-      gameAgainstAI finalState
+    Just fs -> humanAgainstAI fs
+
+aiAgainstAI :: Checkers -> IO ()
+aiAgainstAI state = do
+  clearScreen
+  printBoard $ board state
+  let newState = calculateMoveState state
+  case newState of
+    Nothing -> print "Game Over"
+    Just ns -> do
+      let newBoard = board ns
+      clearScreen
+      printBoard newBoard
+      sleep 0.3
+      let finalState = calculateMoveState ns
+      case finalState of
+        Nothing -> print "Game Over"
+        Just fs -> aiAgainstAI fs
+
+calculateMoveState :: Checkers -> Maybe Checkers
+calculateMoveState state = makeMoveState state move
+  where
+    board_ = board state
+    color = player state
+    dir = direction state
+    validMoves = getAllMoves board_ color dir
+    move = chooseBestMove state validMoves Nothing
 
 waitForMove :: Color -> Board -> Direction -> IO Board
 waitForMove playerColor board dir = do

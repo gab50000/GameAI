@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a9023634869fb2b2d12b61d23d264c7e7199b00dcd1a45590aee224cfbfc28ff
+-- hash: bee45fa08fa787bba14dc21c65d69e47d7e7d39f8976ccaffb65ef67c995c12e
 
 name:           GameAI
 version:        0.1.0.0
@@ -37,6 +37,7 @@ library
       ansi-terminal
     , base >=4.7 && <5
     , containers
+    , extra
     , ilist
   default-language: Haskell2010
 
@@ -50,6 +51,7 @@ executable checkers
     , ansi-terminal
     , base >=4.7 && <5
     , containers
+    , extra
     , ilist
   default-language: Haskell2010
 
@@ -63,6 +65,7 @@ executable tictactoe
     , ansi-terminal
     , base >=4.7 && <5
     , containers
+    , extra
     , ilist
   default-language: Haskell2010
 
@@ -79,5 +82,6 @@ test-suite GameAI-test
     , ansi-terminal
     , base >=4.7 && <5
     , containers
+    , extra
     , ilist
   default-language: Haskell2010

@@ -24,6 +24,7 @@ dependencies:
 - containers
 - ilist
 - ansi-terminal
+- extra
 
 library:
   source-dirs: src
