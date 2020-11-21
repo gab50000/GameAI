@@ -254,6 +254,16 @@ makeMove board ((i, j), (ii, jj))
     deltaI = signum (i - ii)
     deltaJ = signum (j - jj)
 
+makeMoveState :: Checkers -> Move Checkers -> Maybe Checkers
+makeMoveState state move = newState
+  where
+    newState = case maybeNewBoard of
+      Just newBoard -> Just (Checkers newBoard opponentColor opponentDirection)
+      Nothing -> Nothing
+    maybeNewBoard = makeMove (board state) move
+    opponentColor = oppositeColor (player state)
+    opponentDirection = oppositeDirection (direction state)
+
 getJumps :: Board -> Position -> Direction -> [Move Checkers]
 getJumps board_ pos dir =
   getJump board_ pos dir Left ++ getJump board_ pos dir Right
