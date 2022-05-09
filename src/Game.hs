@@ -13,9 +13,9 @@ class GameState game where
     | [] <- moves = old_move
     | new_score > old_score = chooseBestMove state moves (Just new_move)
     | otherwise = chooseBestMove state rest_moves (Just old_move)
-    where
-      new_score = getScore state new_move
-      old_score = getScore state old_move
-      (new_move : rest_moves) = moves
+   where
+    new_score = getScore state new_move
+    old_score = getScore state old_move
+    (new_move : rest_moves) = moves
 
-  getScore :: game -> (Move game) -> Score
+  getScore :: game -> Move game -> Score

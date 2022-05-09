@@ -2,6 +2,6 @@ module Main where
 
 import Checkers
 
-main = humanAgainstAI initialState
+main = aiAgainstAI initialState
   where
     initialState = Checkers initialBoard Black Up
