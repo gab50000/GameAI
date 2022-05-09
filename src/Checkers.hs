@@ -397,13 +397,14 @@ aiAgainstAI state = do
         Just fs -> aiAgainstAI fs
 
 calculateMoveState :: Checkers -> Maybe Checkers
-calculateMoveState state = makeMoveState state move
+calculateMoveState state = do
+  move <- chooseBestMove state validMoves Nothing
+  makeMoveState state move
  where
   board_ = board state
   color = player state
   dir = direction state
   validMoves = getAllMoves board_ color dir
-  move = chooseBestMove state validMoves Nothing
 
 waitForMove :: Color -> Board -> Direction -> IO Board
 waitForMove playerColor board dir = do

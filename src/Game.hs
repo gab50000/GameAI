@@ -7,10 +7,10 @@ type Score = Int
 class GameState game where
   type Move game
 
-  chooseBestMove :: game -> [Move game] -> Maybe (Move game) -> Move game
+  chooseBestMove :: game -> [Move game] -> Maybe (Move game) -> Maybe (Move game)
+  chooseBestMove _ [] old_move = old_move
   chooseBestMove state (mv : moves) Nothing = chooseBestMove state moves (Just mv)
   chooseBestMove state moves (Just old_move)
-    | [] <- moves = old_move
     | new_score > old_score = chooseBestMove state moves (Just new_move)
     | otherwise = chooseBestMove state rest_moves (Just old_move)
    where
