@@ -141,13 +141,15 @@ computerMove state =
 
 playAgainstHuman :: TicTacToeState -> IO ()
 playAgainstHuman state = do
-  printBoard $ board state
+  let ai_state = computerMove state
+  printBoard $ board ai_state
+  checkState ai_state
   putStrLn "Your turn"
-  new_state <- humanMove state
+  new_state <- humanMove ai_state
+  printBoard $ board state
   checkState new_state
   putStrLn "Computers turn"
-  let ai_state = computerMove new_state
-  checkState ai_state >> playAgainstHuman ai_state
+  playAgainstHuman new_state
 
 checkState :: TicTacToeState -> IO ()
 checkState state
@@ -164,14 +166,17 @@ printWinner x
   | isNothing x = return ()
   | otherwise = print $ drawSymbol x ++ " wins"
 
+rowDelim = "*---*---*---*"
+
 printBoard :: Board -> IO ()
-printBoard [] = return ()
-printBoard (row : rest)
-  | rest /= [] = print line_str >> print (replicate 5 '-') >> printBoard rest
-  | otherwise = print line_str
+printBoard [] = putStrLn rowDelim
+printBoard (row : rest) = do
+  putStrLn rowDelim
+  putStrLn line_str
+  printBoard rest
  where
   (a : b : c : _) = row
-  line_str = drawSymbol a ++ " " ++ drawSymbol b ++ " " ++ drawSymbol c
+  line_str = "| " ++ drawSymbol a ++ " | " ++ drawSymbol b ++ " | " ++ drawSymbol c ++ " |"
 
 drawSymbol :: Maybe Player -> String
 drawSymbol (Just X) = "X"
